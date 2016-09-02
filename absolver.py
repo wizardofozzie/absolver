@@ -2,6 +2,7 @@ import os, sys, string
 import os.path as path
 from bisect import bisect_left
 from itertools import combinations
+from collections import defaultdict
 from time import time
 
 # create anagram word dict
@@ -61,31 +62,56 @@ def findwords(rack, anadict):
                 foundwords.extend(words[1:])
     return foundwords
 
-# scores = {"a": 1, "c": 3, "b": 3, "e": 1, "d": 2, "g": 2, 
-#          "f": 4, "i": 1, "h": 4, "k": 5, "j": 8, "m": 3, 
-#          "l": 1, "o": 1, "n": 1, "q": 10, "p": 3, "s": 1, 
-#          "r": 1, "u": 1, "t": 1, "w": 4, "v": 4, "y": 4, 
-#          "x": 8, "z": 10}
-# 
-# def score_word(word):
-#   return sum([scores[c] for c in word])
 
-# if __name__ == "__main__":    
-#     if len(sys.argv) == 2:
-#         rack = sys.argv[1].strip()
-#     else:
-#         print(
-#             """Usage: python cheat_at_scrabble.py <yourrack>"""
-#             )
-#         sys.exit()
-#     t = time()
-#     anadict = loadvars()
-#     print("Dictionary loading time:{}".format(time()-t))
-#     t = time()
-#     foundwords = set(findwords(rack, anadict))
+def create_turnmap(lstlst):
+    """lstlst is [ [letters for 1 turn], [letters for 2 turns]... ] """
+    tm = defaultdict(list)  # turnmap
+    for index, lst in enumerate(lstlst, start=1):
+        for letter in lst:
+            if letter != ' ':
+                tm[index].append(letter)
+    return tm
 
-#     scored = [(score_word(word), word) for word in foundwords]
-#     scored.sort()
-#     for score, word in scored:
-#         print("%d\t%s" % (score, word))
-#     print("Time elapsed:", (time()-t))
+
+def get_score(turnmap, match):
+    """foo bar"""
+    from copy import deepcopy
+    score = 0
+    tm = deepcopy(turnmap)
+
+    for char in match:
+        for value in tm:
+            if char in tm[value]:
+                # remove first character from list
+                match = match[1:]
+                tm[value].remove(char)
+
+                if value == 1:
+                    score += 100
+                elif value == 2:
+                    score += 6
+                elif value == 3:
+                    score += 5
+                else:
+                    score += 1
+    return score
+
+if __name__ == "__main__":    
+    if len(sys.argv) == 2:
+        rack = sys.argv[1].strip()
+    else:
+        print(
+            """Usage: python cheat_at_scrabble.py <yourrack>"""
+            )
+        sys.exit()
+    t = time()
+    anadict = loadvars()
+    print("Dictionary loading time:{}".format(time()-t))
+    t = time()
+    foundwords = set(findwords(rack, anadict))
+
+    scored = [(score_word(word), word) for word in foundwords]
+    scored.sort()
+    for score, word in scored:
+        print("%d\t%s" % (score, word))
+    print("Time elapsed:", (time()-t))
